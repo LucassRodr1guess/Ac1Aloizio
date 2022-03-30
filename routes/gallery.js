@@ -1,3 +1,5 @@
+const multer = require('multer')
+
 module.exports = (app)=>{
     //importar as configs do database
     var conexao = require('../config/database')
@@ -17,8 +19,15 @@ module.exports = (app)=>{
     //importar das configurações do upload
     var upload = require('../config/upload')
     //fazer o upload da imagem na pasta de destino
-    app.post('/gallery',upload.single('imagem'),async(req,res)=>{
-        //conectar com o database
+    app.post('/gallery',(req,res)=>{
+        //tentar fazer o upload da imagem
+        upload(req,res,async (err)=>{
+            if(err instanceof multer.MulterError){
+                res.send("O arquivo é muito grande")
+            }else if(err){
+                res.send("Tipo de arquivo inválido")
+            }else{
+                        //conectar com o database
         conexao()
         //gravar o nome do arquivo na collection gallery
         var arquivo = await new gallery(
@@ -28,5 +37,7 @@ module.exports = (app)=>{
         ).save()
         //apos o upload voltar para o formulario
         res.redirect('/gallery')
+            }
+        })
     })
 }
